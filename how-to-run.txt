@@ -1,0 +1,10 @@
+Step 1: Start the Server
+- Run the server first so clients can connect.
+java -cp target/classes com.example.Main server 5000
+or
+java -cp target/classes com.example.server.NioServer server 5000
+
+Step 2: Start the Client(s)
+- In a new terminal window, start the client program:
+java -cp target/classes com.example.client.NioClient localhost 5000
+- You can start multiple clients to simulate multiple players.
