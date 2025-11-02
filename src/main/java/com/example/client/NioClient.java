@@ -16,6 +16,16 @@ public class NioClient {
     private final int port;
     private SocketChannel channel;
     private final Charset charset = Charset.forName("UTF-8");
+        public interface MessageListener {
+        void onMessage(String msg);
+    }
+
+    private MessageListener messageListener;
+
+    public void setMessageListener(MessageListener listener) {
+        this.messageListener = listener;
+    }
+
 
     public NioClient(String host, int port) {
         this.host = host;
@@ -59,31 +69,39 @@ public class NioClient {
     }
 
     private void readerLoop() {
-        ByteBuffer buf = ByteBuffer.allocate(1024);
-        try {
-            while (channel.isOpen()) {
-                buf.clear();
-                int r = channel.read(buf);
-                if (r == -1) {
-                    System.out.println("Server closed connection");
-                    channel.close();
-                    break;
-                }
-                if (r == 0) continue;
-                buf.flip();
-                String s = charset.decode(buf).toString();
-                // Print server lines
-                String[] lines = s.split("\\r?\\n");
-                for (String l : lines) {
-                    if (!l.isBlank()) System.out.println("[Server] " + l);
+    ByteBuffer buf = ByteBuffer.allocate(1024);
+    try {
+        while (channel.isOpen()) {
+            buf.clear();
+            int r = channel.read(buf);
+            if (r == -1) {
+                System.out.println("Server closed connection");
+                channel.close();
+                break;
+            }
+            if (r == 0) continue;
+            buf.flip();
+            String s = charset.decode(buf).toString();
+            // Print server lines
+            String[] lines = s.split("\\r?\\n");
+            for (String l : lines) {
+                if (!l.isBlank()) {
+                    System.out.println("[Server] " + l);
+
+                    
+                    if (messageListener != null) {
+                        messageListener.onMessage(l);
+                    }
                 }
             }
-        } catch (IOException e) {
-            System.out.println("Read thread error: " + e.getMessage());
         }
+    } catch (IOException e) {
+        System.out.println("Read thread error: " + e.getMessage());
     }
+}
 
-    private void sendLine(String line) throws IOException {
+
+    public void sendLine(String line) throws IOException {
         if (channel == null || !channel.isOpen()) throw new IOException("Not connected");
         ByteBuffer out = ByteBuffer.wrap((line + "\n").getBytes(charset));
         while (out.hasRemaining()) channel.write(out);
@@ -91,12 +109,12 @@ public class NioClient {
 
     private String normalizeMove(String in) {
         String s = in.trim().toLowerCase();
-        switch (s) {
-            case "r": case "rock": return "ROCK";
-            case "p": case "paper": return "PAPER";
-            case "s": case "scissors": case "scissor": return "SCISSORS";
-            default: return null;
-        }
+        return switch (s) {
+            case "r", "rock" -> "ROCK";
+            case "p", "paper" -> "PAPER";
+            case "s", "scissors", "scissor" -> "SCISSORS";
+            default -> null;
+        };
     }
 
     public static void main(String[] args) throws IOException {
