@@ -173,7 +173,7 @@ public class AiClient {
                     // Gọi API AI
                     System.out.println("Đang gửi ảnh đến AI API...");
                     String vietnameseGesture = predictGestureFromImage(imagePath);
-                    System.out.println("=> AI nhận diện: " + vietnameseGesture);
+                    System.out.println("AI nhận diện: " + vietnameseGesture);
 
                     // Chuyển đổi và gửi lệnh MOVE tới Game Server
                     String gameMove = translateGesture(vietnameseGesture);
