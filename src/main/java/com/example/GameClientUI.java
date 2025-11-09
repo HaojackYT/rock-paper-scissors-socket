@@ -1,4 +1,4 @@
-package com.mycompany.gamerockpaperscissors;
+package com.example;
 import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;

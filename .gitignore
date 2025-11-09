@@ -1,0 +1,96 @@
+# =========================
+# Java / Maven / NetBeans
+# =========================
+
+# Build output
+target/
+build/
+dist/
+nbbuild/
+nbdist/
+
+# Maven backup files
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package archives
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# -------------------------
+# IDE / Editor Settings
+# -------------------------
+
+# NetBeans
+nbproject/private/
+nbproject/Makefile-*.mk
+nbproject/Package-*.bash
+nbproject/Package-*.xml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# -------------------------
+# OS-specific junk files
+# -------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# -------------------------
+# Miscellaneous
+# -------------------------
+# Backup files
+*.bak
+*.swp
+*.swo
+
+# Ignore local environment configs
+.env
+.env.*
+
+# JetBrains cache
+.gradle/

@@ -16,16 +16,11 @@ public class NioClient {
     private final int port;
     private SocketChannel channel;
     private final Charset charset = Charset.forName("UTF-8");
-        public interface MessageListener {
-        void onMessage(String msg);
-    }
-
     private MessageListener messageListener;
 
     public void setMessageListener(MessageListener listener) {
         this.messageListener = listener;
     }
-
 
     public NioClient(String host, int port) {
         this.host = host;
