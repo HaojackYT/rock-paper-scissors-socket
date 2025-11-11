@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -25,34 +26,38 @@ public class NioClient {
     public void start() throws IOException {
         channel = SocketChannel.open();
         channel.connect(new InetSocketAddress(host, port));
-        channel.configureBlocking(true); // Simple blocking client
+        channel.configureBlocking(true);
         System.out.println("Connected to server " + host + ":" + port);
 
-        // Start reader thread
         Thread reader = new Thread(this::readerLoop);
         reader.setDaemon(true);
         reader.start();
 
-        // Main input loop
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("Enter your name: ");
             String name = scanner.nextLine().trim();
             sendLine("JOIN:" + name);
 
-            while (true) {
-                System.out.println("Enter move (rock, paper, scissors) or 'quit':");
+            while (channel.isOpen()) {
+                System.out.print("Enter move (rock, paper, scissors), JOIN:<name> or 'quit': "); 
                 String line = scanner.nextLine().trim();
+                
                 if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                     System.out.println("Bye");
                     channel.close();
                     break;
                 }
-                // Allow convenient input like r/p/s
+                
+                if (line.toUpperCase(Locale.ROOT).startsWith("JOIN:")) {
+                    sendLine(line);
+                    continue;
+                }
+
                 String normalized = normalizeMove(line);
                 if (normalized != null) {
                     sendLine("MOVE:" + normalized);
                 } else {
-                    System.out.println("Unknown command. Type rock/paper/scissors or quit");
+                    System.out.println("Unknown command. Type rock/paper/scissors, JOIN:<name> or quit");
                 }
             }
         }
@@ -72,14 +77,16 @@ public class NioClient {
                 if (r == 0) continue;
                 buf.flip();
                 String s = charset.decode(buf).toString();
-                // Print server lines
+                
                 String[] lines = s.split("\\r?\\n");
                 for (String l : lines) {
                     if (!l.isBlank()) System.out.println("[Server] " + l);
                 }
             }
         } catch (IOException e) {
-            System.out.println("Read thread error: " + e.getMessage());
+            if (channel.isOpen()) {
+                System.out.println("Read thread error: " + e.getMessage());
+            }
         }
     }
 

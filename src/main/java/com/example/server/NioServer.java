@@ -21,6 +21,9 @@ public class NioServer {
     private final Selector selector;
     private final ServerSocketChannel serverChannel;
     private final Charset charset = Charset.forName("UTF-8");
+    
+    // Points required to win the match
+    private static final int POINTS_TO_WIN = 3; 
 
     // Waiting players queue
     private final Queue<Player> waiting = new ConcurrentLinkedQueue<>();
@@ -106,10 +109,19 @@ public class NioServer {
                 sendLine(client, "INFO:You must JOIN first");
                 return;
             }
+            if (p.getOpponent() == null) {
+                sendLine(client, "INFO:Waiting for an opponent. Or, if you just finished a game, send JOIN:<name> again to re-enter the queue.");
+                return;
+            }
+            if (p.getGesture() != null) {
+                sendLine(client, "INFO:Move already recorded. Waiting for opponent...");
+                return;
+            }
+
             try {
                 Gesture g = Gesture.valueOf(move.toUpperCase(Locale.ROOT));
                 p.setGesture(g);
-                sendLine(client, "INFO:Move recorded: " + g);
+                sendLine(client, "INFO:Move recorded: " + g + ". Waiting for opponent...");
                 checkAndResolve(p);
             } catch (IllegalArgumentException ex) {
                 sendLine(client, "INFO:Unknown move. Use ROCK, PAPER or SCISSORS");
@@ -122,23 +134,45 @@ public class NioServer {
     }
 
     private void registerPlayer(SocketChannel client, String name) throws IOException {
-        Player player = new Player(name, client);
-        channelPlayerMap.put(client, player);
-        waiting.add(player);
-        sendLine(client, "INFO:Registered as " + name);
+        Player existingPlayer = channelPlayerMap.get(client);
+        if (existingPlayer != null) {
+            // If the player already exists, reset the status and put them into the queue (after game ends)
+            if (existingPlayer.getOpponent() != null) {
+                // Should not happen after the fix, but just in case
+                sendLine(client, "INFO:You are currently in a game. Wait for it to finish or 'quit' the client.");
+                return;
+            }
+            // Reset status if they were unpaired after a match
+            existingPlayer.resetScore();
+            if (!waiting.contains(existingPlayer)) {
+                waiting.add(existingPlayer);
+            }
+            sendLine(client, "INFO:Re-queued as " + name);
+        } else {
+            // Create a new player
+            Player player = new Player(name, client);
+            channelPlayerMap.put(client, player);
+            player.resetScore(); 
+            waiting.add(player);
+            sendLine(client, "INFO:Registered as " + name);
+        }
+        
         tryPairing();
     }
 
     private void tryPairing() throws IOException {
+        waiting.removeIf(p -> !p.getChannel().isOpen() || p.getOpponent() != null); // Only pair players who are waiting and have no opponent
+        
         while (waiting.size() >= 2) {
             Player p1 = waiting.poll();
             Player p2 = waiting.poll();
             if (p1 == null || p2 == null) break;
+            
             p1.setOpponent(p2);
             p2.setOpponent(p1);
 
-            sendLine(p1.getChannel(), "OPPONENT:" + p2.getName());
-            sendLine(p2.getChannel(), "OPPONENT:" + p1.getName());
+            sendLine(p1.getChannel(), "OPPONENT:" + p2.getName() + ":Score=" + p1.getScore() + "-" + p2.getScore());
+            sendLine(p2.getChannel(), "OPPONENT:" + p1.getName() + ":Score=" + p2.getScore() + "-" + p1.getScore());
             sendLine(p1.getChannel(), "READY:Send MOVE:<ROCK|PAPER|SCISSORS>");
             sendLine(p2.getChannel(), "READY:Send MOVE:<ROCK|PAPER|SCISSORS>");
         }
@@ -146,30 +180,65 @@ public class NioServer {
 
     private void checkAndResolve(Player p) throws IOException {
         Player opp = p.getOpponent();
-        if (opp == null) return; // Not matched yet
+        if (opp == null) return; 
         if (p.getGesture() != null && opp.getGesture() != null) {
-            // Both played
+            // Both players have made a move
             Result r = Result.fromGestures(p.getGesture(), opp.getGesture());
-            // Send results
+            
+            // Declare and initialize pMessage and oppMessage
+            String pMessage;
+            String oppMessage; 
+
             if (r == Result.DRAW) {
-                sendLine(p.getChannel(), "RESULT:DRAW:You=" + p.getGesture() + ":Opp=" + opp.getGesture());
-                sendLine(opp.getChannel(), "RESULT:DRAW:You=" + opp.getGesture() + ":Opp=" + p.getGesture());
+                pMessage = "RESULT:DRAW:You=" + p.getGesture() + ":Opp=" + opp.getGesture();
+                oppMessage = "RESULT:DRAW:You=" + opp.getGesture() + ":Opp=" + p.getGesture();
             } else if (r == Result.WIN) {
-                sendLine(p.getChannel(), "RESULT:WIN:You=" + p.getGesture() + ":Opp=" + opp.getGesture());
-                sendLine(opp.getChannel(), "RESULT:LOSE:You=" + opp.getGesture() + ":Opp=" + p.getGesture());
-            } else { // LOSE
-                sendLine(p.getChannel(), "RESULT:LOSE:You=" + p.getGesture() + ":Opp=" + opp.getGesture());
-                sendLine(opp.getChannel(), "RESULT:WIN:You=" + opp.getGesture() + ":Opp=" + p.getGesture());
+                p.incrementScore();
+                pMessage = "RESULT:WIN:You=" + p.getGesture() + ":Opp=" + opp.getGesture();
+                // If p wins, opp loses
+                oppMessage = "RESULT:LOSE:You=" + opp.getGesture() + ":Opp=" + p.getGesture();
+            } else { // LOSE (p loses, opp wins)
+                opp.incrementScore();
+                pMessage = "RESULT:LOSE:You=" + p.getGesture() + ":Opp=" + opp.getGesture();
+                // If p loses, opp wins
+                oppMessage = "RESULT:WIN:You=" + opp.getGesture() + ":Opp=" + p.getGesture();
             }
-            // Reset gestures and requeue players for another round
+
+            // Send round result
+            sendLine(p.getChannel(), pMessage + ":CurrentScore=" + p.getScore() + "-" + opp.getScore());
+            sendLine(opp.getChannel(), oppMessage + ":CurrentScore=" + opp.getScore() + "-" + p.getScore());
+            
+            // Check for overall win
+            boolean pWins = p.getScore() >= POINTS_TO_WIN;
+            boolean oppWins = opp.getScore() >= POINTS_TO_WIN;
+            
+            if (pWins || oppWins) {
+                // MATCH END - DO NOT AUTOMATICALLY REQUEUE
+                String finalPMessage = pWins ? "GAME_END:YOU_WIN" : "GAME_END:YOU_LOSE";
+                String finalOppMessage = oppWins ? "GAME_END:YOU_WIN" : "GAME_END:YOU_LOSE";
+                
+                sendLine(p.getChannel(), finalPMessage + ":FinalScore=" + p.getScore() + "-" + opp.getScore());
+                sendLine(opp.getChannel(), finalOppMessage + ":FinalScore=" + opp.getScore() + "-" + p.getScore());
+                
+                // Reset score and unpair
+                p.resetScore();
+                opp.resetScore();
+                p.setOpponent(null);
+                opp.setOpponent(null);
+                
+                // Send instruction to the player that they must JOIN again to play another match
+                sendLine(p.getChannel(), "INFO:The match has ended. Send JOIN:<name> to play again or 'quit' in the client to exit.");
+                sendLine(opp.getChannel(), "INFO:The match has ended. Send JOIN:<name> to play again or 'quit' in the client to exit.");
+                
+            } else {
+                // PREPARE FOR NEXT ROUND (keep the pair)
+                sendLine(p.getChannel(), "INFO:Next round. Send MOVE:<ROCK|PAPER|SCISSORS>");
+                sendLine(opp.getChannel(), "INFO:Next round. Send MOVE:<ROCK|PAPER|SCISSORS>");
+            }
+            
+            // Reset Gesture for the new round
             p.setGesture(null);
             opp.setGesture(null);
-            p.setOpponent(null);
-            opp.setOpponent(null);
-            waiting.add(p);
-            waiting.add(opp);
-            // Try pair again (might pair them with different players)
-            tryPairing();
         }
     }
 
@@ -188,10 +257,15 @@ public class NioServer {
                 Player opp = p.getOpponent();
                 if (opp != null) {
                     try {
-                        sendLine(opp.getChannel(), "INFO:Opponent disconnected");
+                        sendLine(opp.getChannel(), "INFO:Opponent disconnected. Send JOIN:<name> to find a new opponent.");
                     } catch (IOException ignored) {}
+                    
+                    // The opponent of the disconnected player will be reset and unpaired
                     opp.setOpponent(null);
-                    waiting.add(opp);
+                    opp.resetScore();
+                    // DO NOT add opp back to the waiting queue, require them to JOIN again
+                    sendLine(opp.getChannel(), "INFO:Match ended due to opponent disconnect. Send JOIN:<name> to play again.");
+                    
                 }
             }
             log("Disconnect " + client.getRemoteAddress());
