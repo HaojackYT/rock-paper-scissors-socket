@@ -5,6 +5,8 @@ or
 java -cp target/classes com.example.server.NioServer server 5000
 
 Step 2: Start the Client(s)
+- In a new terminal window, start the client with ai program:
+java -jar target/ai-client-runnable.jar
 - In a new terminal window, start the client program:
 java -cp target/classes com.example.client.NioClient localhost 5000
 - You can start multiple clients to simulate multiple players.

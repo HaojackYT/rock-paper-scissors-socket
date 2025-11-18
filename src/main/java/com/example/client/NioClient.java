@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -44,20 +45,26 @@ public class NioClient {
             String name = scanner.nextLine().trim();
             sendLine("JOIN:" + name);
 
-            while (true) {
-                System.out.println("Enter move (rock, paper, scissors) or 'quit':");
+            while (channel.isOpen()) {
+                System.out.print("Enter move (rock, paper, scissors), JOIN:<name> or 'quit': "); 
                 String line = scanner.nextLine().trim();
+                
                 if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
                     System.out.println("Bye");
                     channel.close();
                     break;
                 }
-                // Allow convenient input like r/p/s
+                
+                if (line.toUpperCase(Locale.ROOT).startsWith("JOIN:")) {
+                    sendLine(line);
+                    continue;
+                }
+
                 String normalized = normalizeMove(line);
                 if (normalized != null) {
                     sendLine("MOVE:" + normalized);
                 } else {
-                    System.out.println("Unknown command. Type rock/paper/scissors or quit");
+                    System.out.println("Unknown command. Type rock/paper/scissors, JOIN:<name> or quit");
                 }
             }
         }
