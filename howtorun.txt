@@ -4,7 +4,12 @@ docker build -t rock-paper-scissors .
 //After builded image
 docker run -p 8000:8000 rock-paper-scissors
 
-//Without Docker
+//use this url
+http://localhost:8000/predict 
+//with key =file and value = file.jpg,.... other format u want to use
+
+
+#Without Docker
 //First
 py -m venv venv
 //Second
@@ -14,6 +19,8 @@ python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 //run
 python main.py
+
+
 //use this url
 http://localhost:8000/predict 
 //with key =file and value = file.jpg,.... other format u want to use
