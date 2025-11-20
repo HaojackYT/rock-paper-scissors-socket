@@ -4,7 +4,7 @@ java -cp target/classes com.example.Main server 5000
 or
 java -cp target/classes com.example.server.NioServer server 5000
 
-Step 2: Start the Client(s)
+Step 2: Start the GameClientUI(s)
 - In a new terminal window, start the client with ai program:
 java -jar target/ai-client-runnable.jar
 - In a new terminal window, start the client program:
@@ -14,6 +14,7 @@ java -cp target/classes com.example.client.NioClient localhost 5000
 
 Step 3:Start the client with UI
 java -cp target\classes com.example.GameClientUI localhost 5000
+- After that, click Connected on GameClientUI, enter your name in terminal and Play
 
 Step 4 : Start Server hand-gesture-service
 cd hand-gesture-service
