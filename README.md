@@ -56,7 +56,7 @@ The system consists of:
 | ------------------------------------ | :-------------------: | -------------------------------------------------------- |
 | Console Client (`NioClient`)         |    🟢 **Available**   | Basic terminal-based client for testing gameplay         |
 | AI Client (`ai-client-runnable.jar`) |     🔄 **Planned**    | Automatic gameplay using simple rule-based AI            |
-| UI Client (`GameClientUI`)           | 🔄 **In Development** | Java Swing graphical client for user-friendly experience |
+| UI Client (`GameClientUI`)           | 🟢 **Available** | Java Swing graphical client for user-friendly experience |
 
 ### Hand Gesture Integration (Python)
 
