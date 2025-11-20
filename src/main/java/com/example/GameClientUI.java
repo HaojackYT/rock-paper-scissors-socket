@@ -428,30 +428,30 @@ public final class GameClientUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel_RockMouseExited
 
     private void jLabel_RockMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel_RockMouseClicked
-        displayImage(rock, jLabel_Player);
-        random_selection = list.get(random.nextInt(list.size()));
-        displayImage(random_selection, jLabel_BOT);
-        checkWinner(rock, random_selection);
-        Point(rock, random_selection);
-        displayImage("/image/rock.png", jLabel_Player);
-        if (nioClient != null) try {
-            nioClient.sendLine("MOVE:ROCK");
-        } catch (IOException ex) {
-            System.getLogger(GameClientUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        displayImage(rock, jLabel_Player); 
+        jLabel_BOT.setIcon(null); 
+        jTextArea1.setText("Selected Rock. Waiting for the opponent...");
+
+        if (nioClient != null) {
+            try {
+                nioClient.sendLine("MOVE:ROCK");
+            } catch (IOException ex) {
+                jTextArea1.append("\nError when selecting: " + ex.getMessage());
+            }
         }
     }//GEN-LAST:event_jLabel_RockMouseClicked
 
     private void jLabel_ScissorsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel_ScissorsMouseClicked
-        displayImage(scissors, jLabel_Player);
-        random_selection = list.get(random.nextInt(list.size()));
-        displayImage(random_selection, jLabel_BOT);
-        checkWinner(scissors, random_selection);
-        Point(scissors, random_selection);
-        displayImage("/image/scissors.png", jLabel_Player);
-        if (nioClient != null) try {
-            nioClient.sendLine("MOVE:SCISSORS");
-        } catch (IOException ex) {
-            System.getLogger(GameClientUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+       displayImage(scissors, jLabel_Player);
+        jLabel_BOT.setIcon(null);
+        jTextArea1.setText("Selected Scissor. Waiting for the opponent...");
+        
+        if (nioClient != null) {
+            try {
+                nioClient.sendLine("MOVE:SCISSORS");
+            } catch (IOException ex) {
+                jTextArea1.append("\nError when selecting: " + ex.getMessage());
+            }
         }
     }//GEN-LAST:event_jLabel_ScissorsMouseClicked
 
@@ -473,15 +473,15 @@ public final class GameClientUI extends javax.swing.JFrame {
 
     private void jLabel_PaperMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel_PaperMouseClicked
         displayImage(paper, jLabel_Player);
-        random_selection = list.get(random.nextInt(list.size()));
-        displayImage(random_selection, jLabel_BOT);
-        checkWinner(paper, random_selection);
-        Point(paper, random_selection);
-        displayImage("/image/paper.png", jLabel_Player);
-        if (nioClient != null) try {
-            nioClient.sendLine("MOVE:PAPER");
-        } catch (IOException ex) {
-            System.getLogger(GameClientUI.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        jLabel_BOT.setIcon(null);
+        jTextArea1.setText("Selected Paper. Waiting for the opponent...");
+
+        if (nioClient != null) {
+            try {
+                nioClient.sendLine("MOVE:PAPER");
+            } catch (IOException ex) {
+                jTextArea1.append("\nError when selecting: " + ex.getMessage());
+            }
         }
     }//GEN-LAST:event_jLabel_PaperMouseClicked
 
