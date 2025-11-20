@@ -12,7 +12,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # ========== CẤU HÌNH ==========
-app = FastAPI(title="✋ API Nhận diện Kéo Búa Bao")
+app = FastAPI(title="✋ rock paper scissors recognition api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,13 +51,13 @@ def get_finger_status(hand_landmarks):
 def classify_gesture(fingers):
     total = sum(fingers)
     if total == 0:
-        return "BÚA"
+        return "Rock"
     elif total == 2 and fingers[1] == 1 and fingers[2] == 1:
-        return "KÉO"
+        return "Scissors"
     elif total == 5:
-        return "BAO"
+        return "Paper"
     else:
-        return "KHÔNG RÕ"
+        return "Not clear"
 
 
 def process_image(image: np.ndarray) -> str:

@@ -10,3 +10,35 @@ java -jar target/ai-client-runnable.jar
 - In a new terminal window, start the client program:
 java -cp target/classes com.example.client.NioClient localhost 5000
 - You can start multiple clients to simulate multiple players.
+
+
+Step 3:Start the client with UI
+java -cp target\classes com.example.GameClientUI localhost 5000
+
+Step 4 : Start Server hand-gesture-service
+cd hand-gesture-service
+#With docker
+//Firstly
+docker build -t rock-paper-scissors .
+//After builded image
+docker run -p 8000:8000 rock-paper-scissors
+
+//use this url
+http://localhost:8000/predict 
+//with key =file and value = file.jpg,.... other format u want to use
+
+//Without Docker
+//First
+py -m venv venv
+//Second
+venv\Scripts\Activate
+//Third
+python.exe -m pip install --upgrade pip
+pip install -r requirements.txt
+//run
+python main.py
+
+
+//use this url
+http://localhost:8000/predict 
+//with key =file and value = file.jpg,.... other format u want to use
