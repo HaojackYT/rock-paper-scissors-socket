@@ -2,8 +2,7 @@
 //Firstly
 docker build -t rock-paper-scissors .
 //After builded image
-docker run -it --rm rock-paper-scissors
-
+docker run -p 8000:8000 rock-paper-scissors
 
 //Without Docker
 //First
