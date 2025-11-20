@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # =========================
 # Java / Maven / NetBeans
 # =========================
@@ -94,3 +95,6 @@ $RECYCLE.BIN/
 
 # JetBrains cache
 .gradle/
+=======
+venv/
+>>>>>>> hand-gesture-service
